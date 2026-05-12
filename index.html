@@ -1338,6 +1338,16 @@
   </div>
 </div>
 
+<!-- Supabase client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ===== SUPABASE CONFIG =====
+  const SUPABASE_URL = 'https://epwsxulkylewmaalfxex.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwd3N4dWxreWxld21hYWxmeGV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTE1NTgsImV4cCI6MjA5NDE2NzU1OH0._QaSRjtf1kb3mCL6QA3P9HPkj3AU76XdxPbNRtYc7Ls';
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+
 <script>
   // ===== HOUR-AWARE MESSAGING =====
   // Adjusts CTA, modal copy, and banner based on current time in Toronto.
@@ -1567,7 +1577,7 @@
   }
 
   // ===== STEP 1 → STEP 2: Submit request =====
-  function submitBookingRequest() {
+  async function submitBookingRequest() {
     const name = document.getElementById('orderName').value.trim();
     const email = document.getElementById('orderEmail').value.trim();
     const pickup = document.getElementById('orderPickup').value.trim();
@@ -1588,7 +1598,34 @@
       return;
     }
 
+    // Save to Supabase
+    const { data, error } = await supabaseClient
+      .from('quote_requests')
+      .insert({
+        name: name,
+        email: email,
+        pickup_address: pickup,
+        pickup_access: accessData.pickup.type,
+        pickup_stairs: accessData.pickup.type === 'stairs' ? accessData.pickup.stairs : 0,
+        dropoff_address: dropoff,
+        dropoff_access: accessData.dropoff.type,
+        dropoff_stairs: accessData.dropoff.type === 'stairs' ? accessData.dropoff.stairs : 0,
+        item_link: link || null,
+        requested_date: selectedDate,
+        requested_time: selectedTime,
+        status: 'pending'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      alert('Sorry, something went wrong. Please try again or text us at the number below.');
+      return;
+    }
+
     bookingData = {
+      id: data.id,
       name, email, pickup, dropoff, link,
       photo: photo ? photo.name : null,
       date: selectedDateLabel,
@@ -1599,10 +1636,6 @@
       dropoffAccess: accessData.dropoff.type,
       dropoffStairs: accessData.dropoff.type === 'stairs' ? accessData.dropoff.stairs : 0
     };
-
-    // === PRODUCTION: send to Supabase + Twilio SMS to Hossein here ===
-    // await supabase.from('quote_requests').insert(bookingData);
-    // Twilio Edge Function sends SMS to Hossein with the details
 
     // Go to generating screen
     document.getElementById('modalStep1').style.display = 'none';
