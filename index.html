@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MarketMover — I'll Pick It Up For You. Toronto + 30km.</title>
+<meta name="description" content="Found something on Marketplace but it's too far? I'll pick it up and bring it to your door. Same-day. Insured. Best price guaranteed." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,0..100;1,9..144,300..900,0..100&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #F7F1E6;
+    --cream-deep: #EDE4D2;
+    --ink: #1C1612;
+    --ink-soft: #4A3F36;
+    --tomato: #E04A2B;
+    --tomato-deep: #B83918;
+    --moss: #2D5A3D;
+    --moss-light: #3F7A53;
+    --sun: #F5C242;
+    --shadow: rgba(28, 22, 18, 0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Hanken Grotesk', -apple-system, sans-serif;
+    background: var(--cream); color: var(--ink); line-height: 1.5;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(28,22,18,0.04) 1px, transparent 0);
+    background-size: 24px 24px; pointer-events: none; z-index: 1;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 2; }
+
+  .dispatched-bar {
+    background: var(--moss); color: var(--cream);
+    padding: 12px 24px; text-align: center; font-size: 14px; font-weight: 500;
+    display: none; position: relative; z-index: 100;
+  }
+  .dispatched-bar.active { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+  .dispatched-bar .live-dot { width: 8px; height: 8px; background: var(--sun); border-radius: 50%; animation: pulse 1.5s infinite; }
+  .dispatched-bar .quick-actions { display: flex; gap: 12px; }
+  .dispatched-bar .qa-btn { background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 999px; text-decoration: none; font-size: 13px; transition: background 0.2s; color: var(--cream); }
+  .dispatched-bar .qa-btn:hover { background: rgba(255,255,255,0.25); }
+
+  nav { padding: 24px 0; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 10; }
+  .logo {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 26px;
+    font-variation-settings: 'SOFT' 100; letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .logo-dot { width: 12px; height: 12px; background: var(--tomato); border-radius: 50%; }
+  nav .cta-small {
+    background: var(--ink); color: var(--cream);
+    padding: 12px 22px; border-radius: 999px;
+    text-decoration: none; font-weight: 600; font-size: 15px;
+    transition: transform 0.2s, background 0.2s;
+    border: none; cursor: pointer; font-family: inherit;
+  }
+  nav .cta-small:hover { background: var(--tomato); transform: translateY(-2px); }
+
+  .hours-banner {
+    display: none;
+    background: rgba(245, 194, 66, 0.15);
+    border: 1px solid rgba(245, 194, 66, 0.4);
+    border-radius: 14px;
+    padding: 14px 20px;
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: var(--ink);
+    align-items: center;
+    gap: 10px;
+  }
+  .hours-banner.show { display: flex; }
+  .hours-banner .hb-icon { font-size: 18px; flex-shrink: 0; }
+  .hours-banner .hb-text { line-height: 1.4; }
+
+  .hero { padding: 60px 0 100px; }
+  .hero-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: center; }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--cream-deep); padding: 8px 16px; border-radius: 999px;
+    font-size: 14px; font-weight: 500; color: var(--ink-soft); margin-bottom: 24px;
+  }
+  .pulse { width: 8px; height: 8px; background: var(--moss-light); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  h1 {
+    font-family: 'Fraunces', serif; font-size: clamp(44px, 6vw, 78px);
+    font-weight: 500; font-variation-settings: 'SOFT' 80, 'opsz' 144;
+    line-height: 0.98; letter-spacing: -0.025em; margin-bottom: 28px;
+  }
+  h1 em {
+    font-style: italic; color: var(--tomato); font-weight: 400;
+    position: relative; display: inline-block;
+  }
+  h1 em::after {
+    content: ''; position: absolute; bottom: -6px; left: 0; right: 0; height: 12px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 12' fill='none'%3E%3Cpath d='M2 7C50 3 100 9 150 5C200 1 250 8 298 4' stroke='%23E04A2B' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-size: 100% 100%;
+  }
+  .hero-sub { font-size: 19px; color: var(--ink-soft); max-width: 480px; margin-bottom: 36px; line-height: 1.55; }
+  .hero-ctas { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+
+  .btn-primary {
+    background: var(--tomato); color: var(--cream);
+    padding: 18px 32px; border-radius: 999px;
+    text-decoration: none; font-weight: 600; font-size: 17px;
+    display: inline-flex; align-items: center; gap: 10px;
+    border: none; cursor: pointer;
+    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 8px 20px rgba(224, 74, 43, 0.25);
+    font-family: inherit;
+  }
+  .btn-primary:hover { background: var(--tomato-deep); transform: translateY(-2px); box-shadow: 0 12px 28px rgba(224, 74, 43, 0.35); }
+  .btn-arrow { transition: transform 0.2s; }
+  .btn-primary:hover .btn-arrow { transform: translateX(4px); }
+
+  .cta-promise {
+    font-size: 14px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-style: italic;
+  }
+  .cta-promise::before {
+    content: '✓';
+    color: var(--moss);
+    font-weight: 700;
+    font-style: normal;
+  }
+
+  .hero-trust { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-soft); margin-top: 12px; }
+  .stars { color: var(--sun); letter-spacing: 1px; }
+
+  .hero-photo-wrap { position: relative; text-align: center; }
+  .hero-photo {
+    width: 100%; max-width: 420px; aspect-ratio: 4/5;
+    background: var(--cream-deep); border-radius: 12px;
+    position: relative; overflow: hidden; transform: rotate(-2deg);
+    box-shadow: 0 30px 60px var(--shadow); border: 12px solid white; margin: 0 auto;
+  }
+  .hero-photo-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #F5DCC4 0%, #E8B89A 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    position: relative; color: var(--ink);
+  }
+  .placeholder-svg { position: absolute; inset: 0; }
+  .placeholder-label {
+    position: absolute; top: 16px; left: 16px;
+    background: rgba(255,255,255,0.9); padding: 6px 12px; border-radius: 6px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-soft);
+  }
+  .photo-tape {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%) rotate(-3deg);
+    width: 100px; height: 28px; background: rgba(245, 194, 66, 0.7);
+    border-radius: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .floating-card {
+    position: absolute; background: white; padding: 12px 18px;
+    border-radius: 14px; box-shadow: 0 10px 30px var(--shadow);
+    font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;
+  }
+  .floating-card.fc-1 { top: 10%; right: -10px; transform: rotate(4deg); animation: float1 6s ease-in-out infinite; }
+  .floating-card.fc-2 { bottom: 12%; left: -20px; transform: rotate(-5deg); animation: float2 7s ease-in-out infinite; }
+  @keyframes float1 { 0%, 100% { transform: rotate(4deg) translateY(0); } 50% { transform: rotate(4deg) translateY(-8px); } }
+  @keyframes float2 { 0%, 100% { transform: rotate(-5deg) translateY(0); } 50% { transform: rotate(-5deg) translateY(-10px); } }
+  .fc-emoji { font-size: 22px; }
+
+  .section { padding: 80px 0; }
+  .section-eyebrow {
+    font-size: 13px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--tomato); margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Fraunces', serif; font-size: clamp(36px, 4.5vw, 56px);
+    font-weight: 500; font-variation-settings: 'SOFT' 80;
+    line-height: 1.05; letter-spacing: -0.02em;
+    margin-bottom: 16px; max-width: 700px;
+  }
+  .section-sub { font-size: 18px; color: var(--ink-soft); max-width: 560px; margin-bottom: 56px; }
+
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .step { background: white; padding: 28px 24px; border-radius: 20px; transition: transform 0.3s; }
+  .step:hover { transform: translateY(-6px); }
+  .step-num {
+    font-family: 'Fraunces', serif; font-size: 48px; font-weight: 400; font-style: italic;
+    color: var(--tomato); line-height: 1; margin-bottom: 14px; display: block;
+  }
+  .step h3 {
+    font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500;
+    margin-bottom: 10px; letter-spacing: -0.01em;
+  }
+  .step p { color: var(--ink-soft); font-size: 14px; }
+
+  /* Trust / inspection section */
+  .trust-section {
+    background: var(--ink); color: var(--cream);
+    border-radius: 32px; padding: 70px 48px; margin: 40px 0;
+  }
+  .trust-section .section-eyebrow { color: var(--sun); }
+  .trust-section .section-title { color: var(--cream); }
+  .trust-section .section-sub { color: rgba(247, 241, 230, 0.7); }
+
+  .trust-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 40px;
+  }
+  .trust-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 28px; border-radius: 18px;
+    transition: all 0.3s;
+  }
+  .trust-card:hover { background: rgba(255,255,255,0.08); transform: translateY(-4px); }
+  .trust-icon {
+    font-size: 32px; margin-bottom: 16px;
+    width: 56px; height: 56px; background: rgba(245, 194, 66, 0.15);
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+  }
+  .trust-card h3 {
+    font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500;
+    margin-bottom: 10px; letter-spacing: -0.01em;
+  }
+  .trust-card p { font-size: 14px; line-height: 1.55; color: rgba(247, 241, 230, 0.8); }
+
+  /* Tracking section */
+  .tracking-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; align-items: center; }
+  .tracking-features { display: flex; flex-direction: column; gap: 24px; margin-top: 32px; }
+  .feature-row { display: flex; gap: 16px; align-items: flex-start; }
+  .feature-icon {
+    width: 44px; height: 44px; background: var(--cream-deep); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+  }
+  .feature-text h4 {
+    font-family: 'Fraunces', serif; font-size: 19px; font-weight: 500;
+    margin-bottom: 4px; letter-spacing: -0.01em;
+  }
+  .feature-text p { color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
+
+  .tracking-mock {
+    background: white; border-radius: 24px; padding: 24px;
+    box-shadow: 0 20px 50px var(--shadow); overflow: hidden;
+  }
+  .mock-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 16px; border-bottom: 1px solid var(--cream-deep); margin-bottom: 16px;
+  }
+  .mock-status { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--moss); }
+  .mock-eta { background: var(--cream); padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .mock-map {
+    aspect-ratio: 16/10; background: linear-gradient(135deg, #E5DFD0, #D8CFB8);
+    border-radius: 14px; position: relative; overflow: hidden; margin-bottom: 16px;
+  }
+  .mock-roads {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.4) 48%, rgba(255,255,255,0.4) 52%, transparent 52%),
+      linear-gradient(-30deg, transparent 48%, rgba(255,255,255,0.3) 48%, rgba(255,255,255,0.3) 52%, transparent 52%);
+    background-size: 80px 80px, 120px 120px;
+  }
+  .map-pin {
+    position: absolute; width: 36px; height: 36px;
+    background: var(--tomato); border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg); box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .map-pin.driver { top: 40%; left: 35%; animation: bobble 2s ease-in-out infinite; }
+  .map-pin.dest { bottom: 20%; right: 25%; background: var(--moss); }
+  .map-pin span { transform: rotate(45deg); color: white; font-weight: 700; font-size: 12px; }
+  @keyframes bobble {
+    0%, 100% { transform: rotate(-45deg) translateY(0); }
+    50% { transform: rotate(-45deg) translateY(-6px); }
+  }
+  .mock-route {
+    position: absolute; top: 50%; left: 38%; width: 35%; height: 30%;
+    border: 2.5px dashed var(--tomato); border-radius: 50%;
+    border-top: none; border-left: none; opacity: 0.7;
+  }
+  .mock-photo-row { display: flex; gap: 8px; }
+  .mock-photo {
+    flex: 1; aspect-ratio: 1; background: var(--cream-deep); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+  }
+
+  .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
+  .faq-item { background: white; padding: 28px; border-radius: 18px; transition: transform 0.2s; }
+  .faq-item:hover { transform: translateY(-4px); }
+  .faq-item h4 { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; margin-bottom: 10px; letter-spacing: -0.01em; }
+  .faq-item p { color: var(--ink-soft); font-size: 15px; }
+
+  footer {
+    padding: 60px 0 40px; border-top: 1px solid var(--cream-deep); margin-top: 60px;
+    text-align: center; color: var(--ink-soft); font-size: 14px;
+  }
+  footer .logo { justify-content: center; margin-bottom: 16px; }
+  footer p { margin-bottom: 8px; }
+
+  /* ===== BOOKING MODAL ===== */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(28, 22, 18, 0.7);
+    display: none; align-items: flex-start; justify-content: center;
+    z-index: 1000; padding: 40px 16px; overflow-y: auto;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; animation: fadeIn 0.25s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--cream); border-radius: 24px;
+    width: 100%; max-width: 580px; padding: 40px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    position: relative; animation: modalIn 0.3s ease-out;
+    margin-bottom: 40px;
+  }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  .modal-close {
+    position: absolute; top: 20px; right: 20px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--cream-deep); border: none;
+    cursor: pointer; font-size: 20px; color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .modal-close:hover { background: var(--tomato); color: white; }
+
+  .modal-eyebrow {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--tomato); font-weight: 600; margin-bottom: 8px;
+  }
+  .modal h3 {
+    font-family: 'Fraunces', serif; font-size: 28px; font-weight: 500;
+    line-height: 1.1; letter-spacing: -0.01em; margin-bottom: 8px;
+  }
+  .modal .step-sub {
+    color: var(--ink-soft); font-size: 14px; margin-bottom: 24px;
+  }
+
+  /* Progress bar */
+  .step-progress {
+    display: flex; gap: 6px; margin-bottom: 28px;
+  }
+  .step-progress .dot {
+    flex: 1; height: 4px; background: var(--cream-deep); border-radius: 2px;
+    transition: background 0.3s;
+  }
+  .step-progress .dot.done { background: var(--tomato); }
+  .step-progress .dot.active { background: var(--tomato); }
+
+  .modal-field { margin-bottom: 16px; }
+  .modal-field label {
+    display: block; font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--ink-soft); margin-bottom: 6px;
+  }
+  .modal-field input, .modal-field textarea {
+    width: 100%; padding: 12px 14px;
+    border: 1.5px solid var(--cream-deep); border-radius: 10px;
+    font-size: 15px; font-family: inherit;
+    background: white; color: var(--ink);
+    transition: border 0.2s;
+  }
+  .modal-field input:focus, .modal-field textarea:focus {
+    outline: none; border-color: var(--tomato);
+  }
+  .modal-field textarea { resize: vertical; min-height: 60px; }
+  .modal-field .hint { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+  .modal-field.split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-field.split > div { margin-bottom: 0; }
+
+  /* File upload */
+  .file-upload {
+    border: 1.5px dashed var(--cream-deep);
+    border-radius: 10px; padding: 18px;
+    text-align: center; cursor: pointer;
+    transition: border 0.2s, background 0.2s;
+    background: white;
+  }
+  .file-upload:hover { border-color: var(--tomato); background: var(--cream); }
+  .file-upload input { display: none; }
+  .file-upload .fu-icon { font-size: 28px; margin-bottom: 6px; }
+  .file-upload .fu-text { font-size: 13px; color: var(--ink-soft); }
+  .file-upload .fu-bold { font-weight: 600; color: var(--ink); }
+  .file-upload.has-file { border-color: var(--moss); border-style: solid; background: rgba(45,90,61,0.05); }
+
+  .or-divider {
+    text-align: center; margin: 14px 0;
+    font-size: 12px; color: var(--ink-soft);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    position: relative;
+  }
+  .or-divider::before, .or-divider::after {
+    content: ''; position: absolute; top: 50%; width: 40%;
+    height: 1px; background: var(--cream-deep);
+  }
+  .or-divider::before { left: 0; }
+  .or-divider::after { right: 0; }
+
+  /* CALENDAR */
+  .calendar-section { margin-bottom: 16px; }
+  .calendar-section label {
+    display: block; font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--ink-soft); margin-bottom: 10px;
+  }
+  .cal-week {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 6px; margin-bottom: 16px;
+  }
+  .cal-day {
+    background: white; border: 1.5px solid var(--cream-deep);
+    border-radius: 10px; padding: 10px 4px;
+    cursor: pointer; transition: all 0.2s;
+    text-align: center; font-family: inherit;
+  }
+  .cal-day:hover { border-color: var(--tomato); }
+  .cal-day.selected { background: var(--ink); border-color: var(--ink); color: var(--cream); }
+  .cal-day.disabled { opacity: 0.4; cursor: not-allowed; }
+  .cal-day.disabled:hover { border-color: var(--cream-deep); }
+  .cal-dow { font-size: 10px; text-transform: uppercase; opacity: 0.6; margin-bottom: 2px; }
+  .cal-date { font-size: 18px; font-weight: 600; font-family: 'Fraunces', serif; }
+  .cal-month { font-size: 9px; opacity: 0.5; margin-top: 1px; text-transform: uppercase; }
+
+  .time-slots {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .time-slot {
+    background: white; border: 1.5px solid var(--cream-deep);
+    border-radius: 8px; padding: 10px 6px;
+    cursor: pointer; transition: all 0.2s;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    text-align: center;
+  }
+  .time-slot:hover:not(.booked) { border-color: var(--tomato); }
+  .time-slot.selected { background: var(--tomato); border-color: var(--tomato); color: white; }
+  .time-slot.booked {
+    background: var(--cream-deep); color: var(--ink-soft);
+    cursor: not-allowed; text-decoration: line-through;
+    opacity: 0.5;
+  }
+
+  .modal-submit {
+    width: 100%; background: var(--ink); color: var(--cream);
+    padding: 16px; border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    transition: background 0.2s; margin-top: 16px;
+    font-family: inherit;
+  }
+  .modal-submit:hover:not(:disabled) { background: var(--tomato); }
+  .modal-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+  .modal-secondary {
+    width: 100%; background: transparent; color: var(--ink-soft);
+    padding: 12px; border: 1px solid var(--cream-deep);
+    border-radius: 12px; font-size: 14px; cursor: pointer;
+    transition: all 0.2s; margin-top: 8px; font-family: inherit;
+  }
+  .modal-secondary:hover { background: var(--cream-deep); }
+
+  /* STATUS SCREENS */
+  .status-screen { text-align: center; padding: 20px 0; }
+
+  .progress-bar-wrap {
+    width: 100%; height: 8px; background: var(--cream-deep);
+    border-radius: 999px; overflow: hidden; margin: 32px auto 16px;
+    max-width: 300px;
+  }
+  .progress-bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--tomato), var(--sun));
+    border-radius: 999px; width: 0%;
+    transition: width 0.8s ease;
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: 0 0; } }
+
+  .progress-label {
+    font-size: 14px; color: var(--ink-soft);
+    font-family: 'Fraunces', serif; font-style: italic;
+    margin-bottom: 4px;
+  }
+  .progress-percent {
+    font-family: 'Fraunces', serif; font-size: 36px;
+    color: var(--tomato); font-weight: 500;
+  }
+
+  .status-icon-wrap {
+    width: 90px; height: 90px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .status-icon-wrap.accepted {
+    background: rgba(45, 90, 61, 0.15);
+    animation: popIn 0.5s ease-out;
+  }
+  @keyframes popIn { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  .status-icon-wrap.accepted::before {
+    content: '✓'; color: var(--moss); font-size: 44px; font-weight: 700;
+  }
+
+  .quote-result {
+    background: linear-gradient(135deg, var(--tomato) 0%, var(--tomato-deep) 100%);
+    color: white; padding: 36px 28px; border-radius: 20px;
+    margin: 24px 0; box-shadow: 0 20px 40px rgba(224,74,43,0.25);
+  }
+  .quote-result .ql {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em;
+    opacity: 0.9; margin-bottom: 10px;
+  }
+  .quote-result .qp {
+    font-family: 'Fraunces', serif; font-size: 72px; font-weight: 500;
+    line-height: 1;
+  }
+  .quote-result .qp sup {
+    font-size: 30px; vertical-align: super; opacity: 0.8; margin-right: 4px;
+  }
+  .quote-result .qd {
+    font-size: 13px; margin-top: 18px;
+    opacity: 0.95; line-height: 1.6;
+    padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .order-summary-card {
+    background: white; border: 1px solid var(--cream-deep);
+    border-radius: 14px; padding: 20px;
+    text-align: left; margin: 16px 0;
+  }
+  .summary-row {
+    display: flex; justify-content: space-between;
+    padding: 8px 0; font-size: 14px;
+  }
+  .summary-row:not(:last-child) { border-bottom: 1px solid var(--cream-deep); }
+  .summary-row .label { color: var(--ink-soft); }
+  .summary-row .value { font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; }
+
+  .order-id {
+    font-family: 'Fraunces', serif;
+    background: var(--cream-deep); padding: 6px 14px;
+    border-radius: 999px; font-size: 13px;
+    display: inline-block; margin-bottom: 16px;
+    color: var(--ink-soft);
+  }
+
+  .info-box {
+    background: rgba(245, 194, 66, 0.1);
+    border: 1px solid rgba(245, 194, 66, 0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--ink);
+    margin: 16px 0;
+    line-height: 1.55;
+    text-align: left;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .info-box .ib-icon { color: #8B6F1A; flex-shrink: 0; font-size: 16px; }
+
+  /* CHAT WIDGET */
+  .chat-bubble {
+    position: fixed; bottom: 24px; right: 24px;
+    width: 60px; height: 60px; background: var(--tomato);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 10px 30px rgba(224, 74, 43, 0.4);
+    z-index: 999; transition: transform 0.2s; border: none;
+  }
+  .chat-bubble:hover { transform: scale(1.08); }
+  .chat-bubble svg { width: 28px; height: 28px; fill: white; }
+  .chat-bubble .notif {
+    position: absolute; top: 4px; right: 4px;
+    width: 14px; height: 14px; background: var(--sun);
+    border-radius: 50%; border: 2px solid white;
+  }
+
+  .chat-window {
+    position: fixed; bottom: 100px; right: 24px;
+    width: 360px; max-width: calc(100vw - 32px);
+    height: 520px; max-height: calc(100vh - 140px);
+    background: white; border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(28, 22, 18, 0.2);
+    z-index: 999; display: none; flex-direction: column; overflow: hidden;
+  }
+  .chat-window.open { display: flex; animation: slideUp 0.25s ease-out; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .chat-header {
+    background: var(--ink); color: var(--cream);
+    padding: 18px 20px; display: flex; align-items: center; gap: 12px;
+  }
+  .chat-avatar {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #F5DCC4, #D89B7B);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--ink); flex-shrink: 0; font-family: 'Fraunces', serif;
+  }
+  .chat-header-info { flex: 1; }
+  .chat-header-info .name { font-weight: 600; font-size: 15px; }
+  .chat-header-info .status { font-size: 12px; opacity: 0.7; display: flex; align-items: center; gap: 6px; }
+  .status-dot { width: 6px; height: 6px; background: var(--moss-light); border-radius: 50%; }
+  .chat-close-btn {
+    background: transparent; border: none; color: var(--cream);
+    cursor: pointer; font-size: 22px; opacity: 0.6; transition: opacity 0.2s;
+  }
+  .chat-close-btn:hover { opacity: 1; }
+
+  .chat-messages {
+    flex: 1; padding: 20px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 12px; background: var(--cream);
+  }
+  .msg {
+    max-width: 85%; padding: 12px 16px; border-radius: 16px;
+    font-size: 14px; line-height: 1.45; animation: msgIn 0.2s ease-out;
+  }
+  @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .msg.bot { background: white; align-self: flex-start; border-bottom-left-radius: 4px; color: var(--ink); }
+  .msg.user { background: var(--tomato); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+
+  .chat-suggestions { padding: 8px 20px 12px; display: flex; gap: 6px; flex-wrap: wrap; background: var(--cream); }
+  .chat-suggestion {
+    background: white; border: 1px solid var(--cream-deep); color: var(--ink);
+    padding: 6px 12px; border-radius: 999px; font-size: 12px;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+  }
+  .chat-suggestion:hover { border-color: var(--tomato); color: var(--tomato); }
+
+  .chat-input-wrap {
+    border-top: 1px solid var(--cream-deep); padding: 12px;
+    background: white; display: flex; gap: 8px;
+  }
+  .chat-input {
+    flex: 1; border: none; background: var(--cream);
+    padding: 12px 16px; border-radius: 999px;
+    font-family: inherit; font-size: 14px; outline: none;
+  }
+  .chat-input:focus { background: var(--cream-deep); }
+  .chat-send {
+    width: 42px; height: 42px; background: var(--tomato);
+    border: none; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: white; transition: background 0.2s;
+  }
+  .chat-send:hover { background: var(--tomato-deep); }
+
+  .dispatch-actions {
+    padding: 12px; background: var(--moss); color: var(--cream);
+    display: none; flex-direction: column; gap: 8px;
+  }
+  .dispatch-actions.show { display: flex; }
+  .dispatch-actions .da-row { display: flex; gap: 8px; }
+  .dispatch-actions .da-btn {
+    flex: 1; background: rgba(255,255,255,0.15); color: var(--cream);
+    text-decoration: none; padding: 10px; border-radius: 10px;
+    text-align: center; font-size: 13px; font-weight: 600;
+    transition: background 0.2s;
+  }
+  .dispatch-actions .da-btn:hover { background: rgba(255,255,255,0.25); }
+  .dispatch-actions .da-label { font-size: 11px; text-align: center; opacity: 0.8; padding-bottom: 4px; }
+
+  @media (max-width: 900px) {
+    .hero-grid, .tracking-grid { grid-template-columns: 1fr; gap: 40px; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .trust-grid { grid-template-columns: 1fr; }
+    .faq-grid { grid-template-columns: 1fr; }
+    .trust-section { padding: 60px 28px; border-radius: 24px; }
+    nav .cta-small { display: none; }
+    .modal { padding: 28px 20px; }
+    .modal-field.split { grid-template-columns: 1fr; gap: 0; }
+    .modal-field.split > div { margin-bottom: 16px; }
+    .quote-result .qp { font-size: 56px; }
+  }
+  @media (max-width: 500px) {
+    .chat-window { right: 16px; left: 16px; width: auto; bottom: 92px; }
+    .chat-bubble { right: 16px; bottom: 16px; }
+    .steps { grid-template-columns: 1fr; }
+    .time-slots { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="dispatched-bar" id="dispatchBar">
+  <span class="live-dot"></span>
+  <span><strong>Hossein is on a delivery right now.</strong></span>
+  <div class="quick-actions">
+    <a href="tel:+14165550123" class="qa-btn">📞 Call</a>
+    <a href="sms:+14165550123" class="qa-btn">💬 Text</a>
+    <a href="#" class="qa-btn" onclick="openChat();return false;">Live chat</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <nav>
+    <div class="logo"><span class="logo-dot"></span> MarketMover</div>
+    <button class="cta-small" onclick="openBookingModal()">Get a quote</button>
+  </nav>
+
+  <div class="hours-banner" id="hoursBanner">
+    <span class="hb-icon">🌙</span>
+    <span class="hb-text" id="hoursBannerText">Outside business hours — quotes returned next morning</span>
+  </div>
+
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-tag"><span class="pulse"></span> Picking up across Toronto today</div>
+        <h1>Found it on Marketplace. Now <em>I'll grab it</em> for you.</h1>
+        <p class="hero-sub">
+          That perfect coffee table in Mississauga? The dresser in Markham? You don't need a truck — just point, and I'll bring it to your door. Anywhere within 30 km of downtown Toronto.
+        </p>
+        <div class="hero-ctas">
+          <button class="btn-primary" onclick="openBookingModal()"><span id="ctaTimeText">Get a quote in 5 minutes</span> <span class="btn-arrow">→</span></button>
+          <span class="cta-promise">You'll be provided with the best price possible</span>
+        </div>
+        <div class="hero-trust">
+          <span class="stars">★★★★★</span>
+          <span>Toronto + 30 km · Cash or e-transfer · Same-day</span>
+        </div>
+      </div>
+
+      <div class="hero-photo-wrap">
+        <div class="hero-photo">
+          <div class="photo-tape"></div>
+          <div class="hero-photo-placeholder">
+            <span class="placeholder-label">Replace with your photo</span>
+            <svg class="placeholder-svg" viewBox="0 0 300 380" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="150" cy="340" rx="140" ry="14" fill="rgba(28,22,18,0.08)"/>
+              <circle cx="150" cy="180" r="50" fill="#3D2B1F"/>
+              <path d="M105 165 Q150 115 195 165 L195 155 Q150 105 105 155 Z" fill="#1C1410"/>
+              <rect x="120" y="220" width="60" height="90" rx="6" fill="#E04A2B"/>
+              <path d="M115 235 L100 290 L115 295 Z" fill="#E04A2B"/>
+              <path d="M185 235 L200 290 L185 295 Z" fill="#E04A2B"/>
+              <path d="M138 195 Q150 205 162 195" stroke="#1C1410" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <circle cx="135" cy="178" r="3" fill="#1C1410"/>
+              <circle cx="165" cy="178" r="3" fill="#1C1410"/>
+            </svg>
+          </div>
+        </div>
+        <div class="floating-card fc-1"><span class="fc-emoji">📸</span> Photo approval before loading</div>
+        <div class="floating-card fc-2"><span class="fc-emoji">📍</span> Live tracking on</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">How it works</div>
+    <h2 class="section-title">Four steps. Total control at every one.</h2>
+    <p class="section-sub">You're never blind to what's happening. Approve before I load. Approve before I deliver.</p>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">1</span>
+        <h3>Request a quote</h3>
+        <p>Pick a time slot, give me the addresses, and link the Marketplace ad or send a photo of the item.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <h3>I send your price</h3>
+        <p>I review and send you the best price possible — usually within 5 minutes. Accept it and we're locked in.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <h3>I inspect & send photos</h3>
+        <p>I check the item carefully before loading and text you clear photos. You decide whether to take it.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">4</span>
+        <h3>You pay, I deliver</h3>
+        <p>You e-transfer the seller directly. Once they confirm, I load up and bring it to your door.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust-section">
+    <div class="section-eyebrow">Your protection</div>
+    <h2 class="section-title">Inspect first. Approve. Then pay.</h2>
+    <p class="section-sub">You never send money for an item you haven't seen confirmed. Here's exactly how it works.</p>
+
+    <div class="trust-grid">
+      <div class="trust-card">
+        <div class="trust-icon">🔍</div>
+        <h3>I inspect before loading</h3>
+        <p>I check the item carefully for scratches, stains, missing parts, or anything that doesn't match the listing. I treat it like it's my own purchase.</p>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">📸</div>
+        <h3>Photos to you on the spot</h3>
+        <p>Clear photos from every angle, sent to you the moment I have the item. You see exactly what you're getting before any money moves.</p>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">✅</div>
+        <h3>You approve, then you pay the seller</h3>
+        <p>Once you approve the photos, you e-transfer the seller directly. They confirm received, I load up, and head to your door. If you change your mind after photos, a $20 cancellation fee applies for the trip.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="tracking-grid">
+      <div>
+        <div class="section-eyebrow">Watch every step</div>
+        <h2 class="section-title">Live tracking, the whole way.</h2>
+        <p class="section-sub">From the moment I head to pickup, you can watch my location on the map until I'm at your door.</p>
+        <div class="tracking-features">
+          <div class="feature-row">
+            <div class="feature-icon">📍</div>
+            <div class="feature-text">
+              <h4>Live map tracking</h4>
+              <p>Open your tracking link and watch me move from pickup to drop-off in real time. No more "where is my stuff?"</p>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-icon">💬</div>
+            <div class="feature-text">
+              <h4>Direct line to me</h4>
+              <p>Call, text, or live chat me through the website while I'm on your trip. One tap and I'm there.</p>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-icon">⏰</div>
+            <div class="feature-text">
+              <h4>10-minute heads-up</h4>
+              <p>You get a text when I'm about 10 minutes out — no more sitting by the door waiting.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tracking-mock">
+        <div class="mock-header">
+          <div class="mock-status"><span class="status-dot"></span> En route to you</div>
+          <div class="mock-eta">ETA 12 min</div>
+        </div>
+        <div class="mock-map">
+          <div class="mock-roads"></div>
+          <div class="mock-route"></div>
+          <div class="map-pin driver"><span>H</span></div>
+          <div class="map-pin dest"><span>📍</span></div>
+        </div>
+        <div class="mock-photo-row">
+          <div class="mock-photo">🛋️</div>
+          <div class="mock-photo">📦</div>
+          <div class="mock-photo">✓</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Common questions</div>
+    <h2 class="section-title">The stuff people usually ask.</h2>
+    <div class="faq-grid">
+      <div class="faq-item">
+        <h4>How does payment work?</h4>
+        <p>After I send you photos and you approve the item, you e-transfer the seller directly. Once they confirm, I load and deliver. You pay me my delivery fee (cash or e-transfer) when the item arrives. No upfront charges from me.</p>
+      </div>
+      <div class="faq-item">
+        <h4>What if I change my mind after seeing the photos?</h4>
+        <p>That's your call — you can decline the item with no payment to the seller. But because I already drove to the pickup, a $20 cancellation fee applies to cover the trip. If the item is genuinely not as described, no fee — that's on the seller.</p>
+      </div>
+      <div class="faq-item">
+        <h4>What can't you take?</h4>
+        <p>Mattresses, large 3-seat sofas and sectionals, and appliances over 100 lbs. I'm a solo operation, so I stick to items I can handle on my own. Loveseats, dressers, desks, dining sets, bikes — all good.</p>
+      </div>
+      <div class="faq-item">
+        <h4>How far do you go?</h4>
+        <p>Within 30 km of downtown Toronto — including Mississauga, Markham, Vaughan, Etobicoke, Scarborough, North York, and parts of Brampton.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="logo"><span class="logo-dot"></span> MarketMover</div>
+    <p>Toronto's friendliest Marketplace pickup service.</p>
+    <p>Text or call: <strong>(416) 555-0123</strong></p>
+    <p style="margin-top: 8px; font-size: 13px;">Service area: 30 km radius of downtown Toronto · Cash & e-transfer only</p>
+    <p style="margin-top: 16px; opacity: 0.6;">© 2026 MarketMover · Operated in Toronto, ON</p>
+  </footer>
+
+</div>
+
+<!-- ===== BOOKING MODAL ===== -->
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeBookingModal()" aria-label="Close">×</button>
+
+    <!-- STEP 1: BOOKING FORM -->
+    <div id="modalStep1">
+      <div class="step-progress">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div class="modal-eyebrow">Step 1 of 3 — Your request</div>
+      <h3>Tell me what you need.</h3>
+      <p class="step-sub" id="step1Sub">I'll review and send you the best price possible within 5 minutes.</p>
+
+      <div class="modal-field split">
+        <div>
+          <label for="orderName">Your name</label>
+          <input type="text" id="orderName" placeholder="First name" required />
+        </div>
+        <div>
+          <label for="orderEmail">Email</label>
+          <input type="email" id="orderEmail" placeholder="you@example.com" required />
+        </div>
+      </div>
+
+      <div class="modal-field">
+        <label for="orderPickup">Pickup address</label>
+        <input type="text" id="orderPickup" placeholder="123 Some St, Mississauga" required />
+      </div>
+      <div class="modal-field">
+        <label for="orderDropoff">Drop-off address</label>
+        <input type="text" id="orderDropoff" placeholder="456 Your St, Toronto" required />
+      </div>
+
+      <div class="modal-field">
+        <label for="orderLink">Marketplace listing link</label>
+        <input type="url" id="orderLink" placeholder="https://facebook.com/marketplace/item/..." />
+        <p class="hint">Best option — gives me all the item details at once.</p>
+      </div>
+
+      <div class="or-divider">or</div>
+
+      <div class="modal-field">
+        <label>Photo of the item</label>
+        <label class="file-upload" id="fileUploadLabel">
+          <div class="fu-icon">📷</div>
+          <div class="fu-text"><span class="fu-bold">Tap to upload</span> a clear photo</div>
+          <input type="file" id="orderPhoto" accept="image/*" onchange="handleFileUpload(this)" />
+        </label>
+      </div>
+
+      <div class="calendar-section">
+        <label>When would you like to receive it?</label>
+        <div class="cal-week" id="calWeek"></div>
+      </div>
+
+      <div class="calendar-section">
+        <label>Pick a time slot</label>
+        <div class="time-slots" id="timeSlots"></div>
+      </div>
+
+      <button class="modal-submit" onclick="submitBookingRequest()">Send my request →</button>
+    </div>
+
+    <!-- STEP 2: GENERATING QUOTE -->
+    <div id="modalStep2" style="display:none;" class="status-screen">
+      <div class="step-progress">
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+      <div class="modal-eyebrow">Step 2 of 3 — Generating</div>
+      <h3 id="step2Title">Calculating your best price…</h3>
+      <p class="step-sub" id="step2Sub">I've been notified and I'm reviewing your request now. Usually takes about 5 minutes.</p>
+
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+      <div class="progress-label">Hossein is working on your quote</div>
+      <div class="progress-percent"><span id="progressPercent">0</span>%</div>
+    </div>
+
+    <!-- STEP 3: QUOTE READY -->
+    <div id="modalStep3" style="display:none;" class="status-screen">
+      <div class="step-progress">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+      </div>
+      <div class="modal-eyebrow">Step 3 of 3 — Your quote</div>
+      <h3>Here's your price.</h3>
+      <p class="step-sub">Reviewed by Hossein. This covers everything — pickup, delivery, and live tracking.</p>
+
+      <div class="quote-result">
+        <div class="ql">Total delivery fee</div>
+        <div class="qp"><sup>$</sup><span id="finalQuotePrice">75</span></div>
+        <div class="qd">
+          Cash or e-transfer on delivery · You pay the seller directly after photo approval · Live tracking included
+        </div>
+      </div>
+
+      <button class="modal-submit" onclick="acceptQuote()">Accept & continue →</button>
+      <button class="modal-secondary" onclick="closeBookingModal()">I'll think about it</button>
+    </div>
+
+    <!-- STEP 4: PHONE NUMBER -->
+    <div id="modalStep4" style="display:none;">
+      <div class="step-progress">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+      </div>
+      <div class="modal-eyebrow">Almost done</div>
+      <h3>One last thing — your phone.</h3>
+      <p class="step-sub">So I can text you tracking updates and reach you on pickup day.</p>
+
+      <div class="modal-field">
+        <label for="orderPhone">Phone number</label>
+        <input type="tel" id="orderPhone" placeholder="416 555 0123" required />
+      </div>
+
+      <div class="info-box">
+        <span class="ib-icon">ℹ️</span>
+        <div>I'll text you on pickup day with photos of the item. You approve, e-transfer the seller, and I deliver. Easy.</div>
+      </div>
+
+      <button class="modal-submit" onclick="confirmBooking()">Confirm booking</button>
+    </div>
+
+    <!-- STEP 5: CONFIRMED -->
+    <div id="modalStep5" style="display:none;" class="status-screen">
+      <div class="status-icon-wrap accepted"></div>
+      <h3>You're all set! 🎉</h3>
+      <p class="step-sub">I'll text you on the day of pickup. Watch for photos before I load anything.</p>
+      <span class="order-id">Order #<span id="orderIdDisplay">MM-2A4F</span></span>
+
+      <div class="order-summary-card" id="orderSummaryCard"></div>
+
+      <button class="modal-submit" onclick="closeBookingModal()" style="background: var(--moss);">Done</button>
+    </div>
+  </div>
+</div>
+
+<button class="chat-bubble" onclick="toggleChat()" aria-label="Open chat">
+  <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+  <span class="notif"></span>
+</button>
+
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <div class="chat-avatar">H</div>
+    <div class="chat-header-info">
+      <div class="name">Hossein · MarketMover</div>
+      <div class="status"><span class="status-dot"></span> <span id="chatStatus">Usually replies in minutes</span></div>
+    </div>
+    <button class="chat-close-btn" onclick="toggleChat()">×</button>
+  </div>
+
+  <div class="chat-messages" id="chatMessages">
+    <div class="msg bot">Hey! 👋 I'm here to help. Got a question, or want to book a pickup?</div>
+  </div>
+
+  <div class="chat-suggestions" id="chatSuggestions">
+    <button class="chat-suggestion" onclick="sendSuggestion('How does payment work?')">How does payment work?</button>
+    <button class="chat-suggestion" onclick="sendSuggestion('Do you go to Mississauga?')">Do you go to Mississauga?</button>
+    <button class="chat-suggestion" onclick="sendSuggestion('What if I don\u2019t like the item?')">What if I don't like the item?</button>
+    <button class="chat-suggestion" onclick="sendSuggestion('Do you take sofas?')">Do you take sofas?</button>
+  </div>
+
+  <div class="dispatch-actions" id="dispatchActions">
+    <div class="da-label">Hossein is on a delivery — reach him directly</div>
+    <div class="da-row">
+      <a href="tel:+14165550123" class="da-btn">📞 Call now</a>
+      <a href="sms:+14165550123" class="da-btn">💬 Text</a>
+    </div>
+  </div>
+
+  <div class="chat-input-wrap">
+    <input type="text" class="chat-input" id="chatInput" placeholder="Type a question..." onkeydown="if(event.key==='Enter')sendMessage()" />
+    <button class="chat-send" onclick="sendMessage()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  // ===== HOUR-AWARE MESSAGING =====
+  // Adjusts CTA, modal copy, and banner based on current time in Toronto.
+  // Customize these business hours to your real schedule:
+  const BUSINESS_HOURS = {
+    weekday: { start: 8, end: 22 },   // Mon-Fri: 8 AM – 10 PM
+    weekend: { start: 9, end: 22 }    // Sat-Sun: 9 AM – 10 PM
+  };
+
+  function getCurrentMode() {
+    // Get Toronto time (handles DST automatically)
+    const torontoNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Toronto' }));
+    const hour = torontoNow.getHours();
+    const day = torontoNow.getDay();
+    const isWeekend = day === 0 || day === 6;
+    const hours = isWeekend ? BUSINESS_HOURS.weekend : BUSINESS_HOURS.weekday;
+
+    if (hour >= hours.start && hour < hours.end) {
+      // Within business hours
+      if (hour >= 22 || hour < 7) return 'overnight'; // safety fallback
+      return 'active';
+    }
+    // Outside business hours
+    if (hour >= hours.end || hour < 6) return 'overnight';
+    return 'earlyMorning'; // 6-8 AM, just before opening
+  }
+
+  function applyTimeMessaging() {
+    const mode = getCurrentMode();
+    const cta = document.getElementById('ctaTimeText');
+    const banner = document.getElementById('hoursBanner');
+    const bannerText = document.getElementById('hoursBannerText');
+    const step1Sub = document.getElementById('step1Sub');
+    const step2Title = document.getElementById('step2Title');
+    const step2Sub = document.getElementById('step2Sub');
+    const bannerIcon = banner.querySelector('.hb-icon');
+
+    if (mode === 'active') {
+      // Business hours — fast response
+      cta.textContent = 'Get a quote in 5 minutes';
+      banner.classList.remove('show');
+      step1Sub.textContent = "I'll review and send you the best price possible within 5 minutes.";
+      step2Title.textContent = 'Calculating your best price…';
+      step2Sub.textContent = "I've been notified and I'm reviewing your request now. Usually takes about 5 minutes.";
+    } else if (mode === 'earlyMorning') {
+      // 6-8 AM — about to start
+      cta.textContent = 'Get a quote';
+      banner.classList.add('show');
+      bannerIcon.textContent = '☀️';
+      bannerText.textContent = 'Just before opening hours — quotes start coming back from 8 AM.';
+      step1Sub.textContent = "Send your request now — I'll review and send your price as soon as I'm on the road.";
+      step2Title.textContent = 'Your request is in!';
+      step2Sub.textContent = "I'll review and send your price as soon as I'm on the road this morning.";
+    } else {
+      // Overnight
+      cta.textContent = 'Get a quote';
+      banner.classList.add('show');
+      bannerIcon.textContent = '🌙';
+      bannerText.textContent = "Outside business hours — quotes returned first thing in the morning.";
+      step1Sub.textContent = "Send your request now — I'll send your price first thing tomorrow morning.";
+      step2Title.textContent = 'Your request is queued';
+      step2Sub.textContent = "I'm off the road right now. I'll review your request and send your price first thing in the morning.";
+    }
+  }
+
+  // Helper used in chatbot replies
+  function getReplyTimePhrase() {
+    const mode = getCurrentMode();
+    if (mode === 'active') return "I'll send your price within about 5 minutes";
+    if (mode === 'earlyMorning') return "I'll send your price as soon as I'm on the road this morning";
+    return "I'll send your price first thing tomorrow morning";
+  }
+  function getSameDayPhrase() {
+    const mode = getCurrentMode();
+    if (mode === 'active') return "Same-day usually works if you book before noon.";
+    if (mode === 'earlyMorning') return "Booking now puts you first in line for today.";
+    return "Earliest pickup is tomorrow morning at this hour.";
+  }
+
+  // Apply on page load
+  applyTimeMessaging();
+
+  // ===== BOOKING MODAL FLOW =====
+  const bookingModal = document.getElementById('bookingModal');
+  let bookingData = {};
+  let selectedDate = null;
+  let selectedDateLabel = null;
+  let selectedTime = null;
+
+  // Mock booked slots — in production, fetch from Supabase 'bookings' table
+  const bookedSlots = {};
+  const offDays = []; // e.g. [0] to disable Sundays
+  const allTimeSlots = ['9:00 AM', '11:00 AM', '1:00 PM', '3:00 PM', '5:00 PM', '7:00 PM'];
+
+  function openBookingModal() {
+    // Reset
+    bookingData = {};
+    selectedDate = null;
+    selectedTime = null;
+    document.getElementById('modalStep1').style.display = 'block';
+    document.getElementById('modalStep2').style.display = 'none';
+    document.getElementById('modalStep3').style.display = 'none';
+    document.getElementById('modalStep4').style.display = 'none';
+    document.getElementById('modalStep5').style.display = 'none';
+    // Clear form fields
+    ['orderName','orderEmail','orderPickup','orderDropoff','orderLink','orderPhone'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('orderPhoto').value = '';
+    document.getElementById('fileUploadLabel').classList.remove('has-file');
+    document.getElementById('fileUploadLabel').querySelector('.fu-text').innerHTML = '<span class="fu-bold">Tap to upload</span> a clear photo';
+
+    renderCalendar();
+    document.getElementById('timeSlots').innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--ink-soft);font-size:13px;padding:14px;">Pick a date first ↑</div>';
+
+    bookingModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeBookingModal() {
+    bookingModal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function handleFileUpload(input) {
+    if (input.files && input.files[0]) {
+      const label = document.getElementById('fileUploadLabel');
+      label.classList.add('has-file');
+      label.querySelector('.fu-text').innerHTML = '<span class="fu-bold">Photo attached:</span> ' + input.files[0].name;
+    }
+  }
+
+  function renderCalendar() {
+    const calWeek = document.getElementById('calWeek');
+    calWeek.innerHTML = '';
+    const today = new Date();
+    const dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const dow = d.getDay();
+      const isOff = offDays.includes(dow);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cal-day' + (isOff ? ' disabled' : '');
+      btn.dataset.date = d.toISOString().split('T')[0];
+      btn.dataset.label = `${dows[dow]}, ${months[d.getMonth()]} ${d.getDate()}`;
+      btn.innerHTML = `
+        <div class="cal-dow">${dows[dow]}</div>
+        <div class="cal-date">${d.getDate()}</div>
+        <div class="cal-month">${months[d.getMonth()]}</div>
+      `;
+      if (!isOff) btn.onclick = () => selectDate(btn);
+      calWeek.appendChild(btn);
+    }
+  }
+
+  function selectDate(btn) {
+    document.querySelectorAll('.cal-day').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedDate = btn.dataset.date;
+    selectedDateLabel = btn.dataset.label;
+    renderTimeSlots(selectedDate);
+    selectedTime = null;
+  }
+
+  function renderTimeSlots(date) {
+    const slotsEl = document.getElementById('timeSlots');
+    slotsEl.innerHTML = '';
+    const booked = bookedSlots[date] || [];
+    const demoBooked = [...booked];
+    if (Math.random() > 0.3 && !demoBooked.length) {
+      demoBooked.push(allTimeSlots[Math.floor(Math.random() * allTimeSlots.length)]);
+    }
+    allTimeSlots.forEach(slot => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      const isBooked = demoBooked.includes(slot);
+      btn.className = 'time-slot' + (isBooked ? ' booked' : '');
+      btn.textContent = slot;
+      if (!isBooked) btn.onclick = () => selectTime(btn, slot);
+      slotsEl.appendChild(btn);
+    });
+  }
+
+  function selectTime(btn, slot) {
+    document.querySelectorAll('.time-slot').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedTime = slot;
+  }
+
+  // ===== STEP 1 → STEP 2: Submit request =====
+  function submitBookingRequest() {
+    const name = document.getElementById('orderName').value.trim();
+    const email = document.getElementById('orderEmail').value.trim();
+    const pickup = document.getElementById('orderPickup').value.trim();
+    const dropoff = document.getElementById('orderDropoff').value.trim();
+    const link = document.getElementById('orderLink').value.trim();
+    const photo = document.getElementById('orderPhoto').files[0];
+
+    if (!name || !email || !pickup || !dropoff) {
+      alert('Please fill in your name, email, and the addresses.');
+      return;
+    }
+    if (!link && !photo) {
+      alert('Please paste the Marketplace link OR upload a photo of the item.');
+      return;
+    }
+    if (!selectedDate || !selectedTime) {
+      alert('Please pick a date and time slot.');
+      return;
+    }
+
+    bookingData = {
+      name, email, pickup, dropoff, link,
+      photo: photo ? photo.name : null,
+      date: selectedDateLabel,
+      dateRaw: selectedDate,
+      time: selectedTime
+    };
+
+    // === PRODUCTION: send to Supabase + Twilio SMS to Hossein here ===
+    // await supabase.from('quote_requests').insert(bookingData);
+    // Twilio Edge Function sends SMS to Hossein with the details
+
+    // Go to generating screen
+    document.getElementById('modalStep1').style.display = 'none';
+    document.getElementById('modalStep2').style.display = 'block';
+    animateProgressBar();
+  }
+
+  function animateProgressBar() {
+    const bar = document.getElementById('progressBarFill');
+    const pct = document.getElementById('progressPercent');
+    const mode = getCurrentMode();
+    let progress = 0;
+
+    // During off-hours, the bar should stall at ~75% to show "queued, waiting for driver"
+    const targetProgress = mode === 'active' ? 100 : 75;
+
+    const interval = setInterval(() => {
+      const increment = progress < (targetProgress - 20) ? 4 + Math.random() * 4 : 0.5 + Math.random();
+      progress = Math.min(targetProgress, progress + increment);
+      bar.style.width = progress + '%';
+      pct.textContent = Math.floor(progress);
+      if (progress >= targetProgress) {
+        clearInterval(interval);
+        if (mode === 'active') {
+          // Demo: auto-complete with a placeholder quote
+          setTimeout(showQuote, 600);
+        } else {
+          // Off-hours: show the "queued" state, do not auto-quote
+          showQueued();
+        }
+      }
+    }, 250);
+  }
+
+  // Off-hours queued state — shown when buyer submits outside business hours
+  function showQueued() {
+    const label = document.querySelector('#modalStep2 .progress-label');
+    if (label) label.textContent = 'Queued — Hossein will respond in the morning';
+    // In production: nothing else needed here — the realtime listener will
+    // flip to step 3 whenever Hossein actually sends back the quote.
+  }
+
+  // ===== STEP 2 → STEP 3: Show quote =====
+  // PRODUCTION: Replace this with Supabase realtime subscription on quote_requests row.
+  // When Hossein sets quoted_price in the DB, this function gets the value and runs.
+  function showQuote() {
+    // Demo: generate a "reasonable" quote based on inputs (placeholder logic)
+    // In production, this is whatever Hossein typed in his admin panel
+    const placeholderQuote = 55 + Math.floor(Math.random() * 50);
+    document.getElementById('finalQuotePrice').textContent = placeholderQuote;
+    bookingData.price = placeholderQuote;
+
+    document.getElementById('modalStep2').style.display = 'none';
+    document.getElementById('modalStep3').style.display = 'block';
+  }
+
+  function acceptQuote() {
+    document.getElementById('modalStep3').style.display = 'none';
+    document.getElementById('modalStep4').style.display = 'block';
+  }
+
+  function confirmBooking() {
+    const phone = document.getElementById('orderPhone').value.trim();
+    if (!phone) {
+      alert('Please enter your phone number.');
+      return;
+    }
+    bookingData.phone = phone;
+
+    // === PRODUCTION: update quote_requests row in Supabase ===
+    // await supabase.from('quote_requests').update({ status: 'confirmed', phone, accepted_at: new Date() }).eq('id', bookingData.id);
+    // Send Hossein a confirmation SMS via Twilio
+
+    // Generate order ID
+    const id = 'MM-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    bookingData.orderId = id;
+    document.getElementById('orderIdDisplay').textContent = id;
+
+    // Render summary
+    const card = document.getElementById('orderSummaryCard');
+    card.innerHTML = `
+      <div class="summary-row"><span class="label">Pickup</span><span class="value">${bookingData.pickup}</span></div>
+      <div class="summary-row"><span class="label">Drop-off</span><span class="value">${bookingData.dropoff}</span></div>
+      <div class="summary-row"><span class="label">When</span><span class="value">${bookingData.date} · ${bookingData.time}</span></div>
+      <div class="summary-row"><span class="label">Delivery fee</span><span class="value" style="color:var(--tomato);font-family:'Fraunces',serif;font-size:18px;">$${bookingData.price}</span></div>
+    `;
+
+    document.getElementById('modalStep4').style.display = 'none';
+    document.getElementById('modalStep5').style.display = 'block';
+  }
+
+  // Close on overlay click
+  bookingModal.addEventListener('click', (e) => {
+    if (e.target === bookingModal) closeBookingModal();
+  });
+
+  // ===== CHAT WIDGET =====
+  const chatWindow = document.getElementById('chatWindow');
+  const chatMessages = document.getElementById('chatMessages');
+  const chatInput = document.getElementById('chatInput');
+  const chatBubble = document.querySelector('.chat-bubble');
+
+  function toggleChat() {
+    chatWindow.classList.toggle('open');
+    if (chatWindow.classList.contains('open')) {
+      chatBubble.querySelector('.notif').style.display = 'none';
+      setTimeout(() => chatInput.focus(), 100);
+    }
+  }
+  function openChat() { if (!chatWindow.classList.contains('open')) toggleChat(); }
+
+  function addMessage(text, who) {
+    const msg = document.createElement('div');
+    msg.className = 'msg ' + who;
+    msg.textContent = text;
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function sendSuggestion(text) {
+    addMessage(text, 'user');
+    document.getElementById('chatSuggestions').style.display = 'none';
+    setTimeout(() => respond(text), 600);
+  }
+
+  function sendMessage() {
+    const txt = chatInput.value.trim();
+    if (!txt) return;
+    addMessage(txt, 'user');
+    chatInput.value = '';
+    document.getElementById('chatSuggestions').style.display = 'none';
+    setTimeout(() => respond(txt), 700);
+  }
+
+  function respond(input) {
+    const q = input.toLowerCase();
+    let reply;
+    if (q.includes('pay') || q.includes('payment') || q.includes('e-transfer') || q.includes('etransfer')) {
+      reply = "Here's the flow: you request a quote, I send my price. On pickup day, I inspect the item and text you photos. Once you approve, you e-transfer the seller directly. They confirm received, I deliver. You pay my delivery fee (cash or e-transfer) when it arrives. No money upfront to me.";
+    } else if (q.includes('change my mind') || q.includes('don\'t like') || q.includes('dont like') || q.includes('cancel')) {
+      reply = "Totally your call after seeing the photos. If you decline because of damage or it's not as described, no charge from me. If you just change your mind, a $20 cancellation fee applies for the trip I already made.";
+    } else if (q.includes('mattress') || q.includes('sectional') || (q.includes('big') && q.includes('sofa')) || q.includes('king bed') || q.includes('queen bed')) {
+      reply = "Sorry, I don't take mattresses, large 3-seat sofas, or sectionals — I'm a solo operation. Loveseats, futons, dressers, desks, and dining sets are all good though.";
+    } else if (q.includes('sofa') || q.includes('couch') || q.includes('loveseat')) {
+      reply = "Loveseats and small couches/futons — yes. Large 3-seat sofas and sectionals — no, those are too big for me to handle solo.";
+    } else if (q.includes('mississauga') || q.includes('markham') || q.includes('vaughan') || q.includes('scarborough') || q.includes('etobicoke') || q.includes('north york') || q.includes('brampton')) {
+      reply = "Yes! That's within my service area (30 km from downtown Toronto). Tap 'Get a quote' to get started.";
+    } else if (q.includes('oshawa') || q.includes('hamilton') || q.includes('pickering') || q.includes('burlington') || q.includes('whitby') || q.includes('ajax')) {
+      reply = "That's outside my 30 km radius unfortunately. I stick close to downtown Toronto so I can stay fast and reliable.";
+    } else if (q.includes('damage') || q.includes('broken') || q.includes('scratch') || q.includes('not as described')) {
+      reply = "I check every item carefully before I load it. If something's off, I send photos and we decide together. If it's genuinely not as described, no cancellation fee — that's on the seller.";
+    } else if (q.includes('photo') || q.includes('picture') || q.includes('inspect')) {
+      reply = "Yes — I inspect every item carefully and text you clear photos from every angle before I load anything. You approve before any money moves.";
+    } else if (q.includes('track') || q.includes('where') || q.includes('location')) {
+      reply = "You get a live tracking link as soon as I'm dispatched. Watch me on the map all the way to your door.";
+    } else if (q.includes('price') || q.includes('cost') || q.includes('how much') || q.includes('quote')) {
+      reply = "Tap 'Get a quote' at the top — fill in your details and " + getReplyTimePhrase() + ".";
+    } else if (q.includes('when') || q.includes('time') || q.includes('schedule') || q.includes('today') || q.includes('tomorrow')) {
+      reply = "Tap 'Get a quote' to see my available time slots for the next 7 days. " + getSameDayPhrase();
+    } else if (q.includes('book') || q.includes('order')) {
+      reply = "Easy — tap 'Get a quote' at the top of the page, fill in the details, pick a time slot, and I'll send your price.";
+    } else if (q.includes('hi') || q.includes('hello') || q.includes('hey')) {
+      reply = "Hey there! 👋 What can I help you with — a quote, a booking, or just a question?";
+    } else {
+      reply = "Good question — let me get back to you on that one. You can also text me at (416) 555-0123 for a faster reply.";
+    }
+    addMessage(reply, 'bot');
+  }
+
+  // ===== DISPATCHED MODE =====
+  function setDispatched(on) {
+    document.getElementById('dispatchBar').classList.toggle('active', on);
+    document.getElementById('dispatchActions').classList.toggle('show', on);
+    document.getElementById('chatStatus').textContent = on
+      ? 'On a delivery — call or text for fastest reply'
+      : 'Usually replies in minutes';
+  }
+  // Demo: uncomment to preview
+  // setDispatched(true);
+
+  /* ===== PRODUCTION HOOKUP NOTES =====
+
+  1. BOOKING SUBMISSION (submitBookingRequest function):
+     await supabase.from('quote_requests').insert({
+       name, email, pickup, dropoff, link, photo_url, date, time, status: 'pending'
+     });
+     // Edge function sends Twilio SMS to Hossein with details
+
+  2. QUOTE GENERATION (replace showQuote function):
+     // Subscribe to realtime updates when Hossein sets quoted_price in admin panel
+     supabase.channel('quotes').on('postgres_changes',
+       { event: 'UPDATE', table: 'quote_requests', filter: `id=eq.${requestId}` },
+       payload => {
+         if (payload.new.quoted_price) {
+           document.getElementById('finalQuotePrice').textContent = payload.new.quoted_price;
+           document.getElementById('modalStep2').style.display = 'none';
+           document.getElementById('modalStep3').style.display = 'block';
+         }
+       }
+     ).subscribe();
+
+  3. DRIVER STATUS:
+     supabase.from('driver_status').select('is_dispatched').single()
+       .then(({data}) => setDispatched(data?.is_dispatched));
+     // Subscribe to changes for live updates
+
+  4. PHOTO UPLOAD:
+     Use Supabase Storage to upload the file from #orderPhoto input
+     Get the public URL, save it on the quote_request row
+  */
+</script>
+
+</body>
+</html>
