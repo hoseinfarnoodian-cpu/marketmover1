@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MarketMover — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,0..100;1,9..144,300..900,0..100&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #F7F1E6;
+    --cream-deep: #EDE4D2;
+    --ink: #1C1612;
+    --ink-soft: #4A3F36;
+    --tomato: #E04A2B;
+    --tomato-deep: #B83918;
+    --moss: #2D5A3D;
+    --moss-light: #3F7A53;
+    --sun: #F5C242;
+    --shadow: rgba(28, 22, 18, 0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Hanken Grotesk', -apple-system, sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding: 24px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+
+  /* ===== LOGIN GATE ===== */
+  .login-gate {
+    max-width: 380px;
+    margin: 80px auto;
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px var(--shadow);
+    text-align: center;
+  }
+  .login-gate .logo {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 28px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .logo-dot { width: 12px; height: 12px; background: var(--tomato); border-radius: 50%; }
+  .login-gate p { color: var(--ink-soft); font-size: 14px; margin-bottom: 24px; }
+  .login-gate input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--cream-deep);
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    margin-bottom: 12px;
+  }
+  .login-gate input:focus { outline: none; border-color: var(--tomato); }
+  .login-gate button {
+    width: 100%;
+    background: var(--ink);
+    color: var(--cream);
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+  }
+  .login-gate button:hover { background: var(--tomato); }
+  .login-error { color: var(--tomato); font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+  /* ===== HEADER ===== */
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .admin-header .logo {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+  .refresh-btn, .logout-btn {
+    background: white;
+    border: 1.5px solid var(--cream-deep);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .refresh-btn:hover { border-color: var(--tomato); color: var(--tomato); }
+  .logout-btn:hover { border-color: var(--ink); }
+
+  /* Dispatched toggle */
+  .dispatch-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    border: 1.5px solid var(--cream-deep);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .toggle-switch {
+    width: 44px;
+    height: 24px;
+    background: var(--cream-deep);
+    border-radius: 999px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-switch.on { background: var(--moss); }
+  .toggle-knob {
+    width: 18px; height: 18px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px; left: 3px;
+    transition: left 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  .toggle-switch.on .toggle-knob { left: 23px; }
+
+  /* ===== STATS ===== */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: white;
+    padding: 18px;
+    border-radius: 14px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    font-weight: 500;
+    color: var(--tomato);
+  }
+  .stat-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  /* ===== BOOKINGS ===== */
+  .section-label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    margin: 24px 0 12px;
+  }
+
+  .booking-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 12px var(--shadow);
+  }
+  .booking-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .booking-name {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 500;
+  }
+  .booking-email { font-size: 13px; color: var(--ink-soft); }
+  .booking-email a { color: var(--tomato); }
+
+  .status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+  .status-pending { background: rgba(245,194,66,0.2); color: #8B6F1A; }
+  .status-quoted { background: rgba(224,74,43,0.12); color: var(--tomato); }
+  .status-accepted { background: rgba(63,122,83,0.15); color: var(--moss); }
+  .status-paid { background: rgba(45,90,61,0.15); color: var(--moss); }
+
+  .booking-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .booking-field { font-size: 14px; }
+  .booking-field .fl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    margin-bottom: 2px;
+  }
+  .booking-field .fv { font-weight: 500; }
+  .booking-field .fv a { color: var(--tomato); word-break: break-all; }
+
+  .booking-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    padding-top: 12px;
+    border-top: 1px solid var(--cream-deep);
+    flex-wrap: wrap;
+  }
+
+  /* Price setter */
+  .price-setter {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--cream-deep);
+    flex-wrap: wrap;
+  }
+  .price-input-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--cream);
+    border: 1.5px solid var(--cream-deep);
+    border-radius: 10px;
+    padding: 0 14px;
+  }
+  .price-input-wrap span { font-size: 18px; color: var(--ink-soft); }
+  .price-input-wrap input {
+    width: 90px;
+    padding: 12px 6px;
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    outline: none;
+  }
+  .send-quote-btn {
+    background: var(--tomato);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+  }
+  .send-quote-btn:hover { background: var(--tomato-deep); }
+  .send-quote-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .price-hint { font-size: 12px; color: var(--ink-soft); }
+
+  .quote-sent-note {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--cream-deep);
+    font-size: 14px;
+    color: var(--moss);
+    font-weight: 600;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+  }
+  .empty-state .es-icon { font-size: 48px; margin-bottom: 12px; }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 600px) {
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .booking-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div id="loginGate" class="login-gate">
+  <div class="logo"><span class="logo-dot"></span> MarketMover</div>
+  <p>Admin access only</p>
+  <input type="password" id="adminPassword" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPassword()" />
+  <button onclick="checkPassword()">Log in</button>
+  <div class="login-error" id="loginError"></div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel" class="container" style="display:none;">
+
+  <div class="admin-header">
+    <div class="logo"><span class="logo-dot"></span> MarketMover Admin</div>
+    <div class="header-actions">
+      <div class="dispatch-toggle">
+        <span>On delivery</span>
+        <div class="toggle-switch" id="dispatchToggle" onclick="toggleDispatch()">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+      <button class="refresh-btn" onclick="loadBookings()">↻ Refresh</button>
+      <button class="logout-btn" onclick="logout()">Log out</button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="statPending">0</div>
+      <div class="stat-label">Need quote</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statQuoted">0</div>
+      <div class="stat-label">Quoted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statAccepted">0</div>
+      <div class="stat-label">Accepted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statPaid">0</div>
+      <div class="stat-label">Paid</div>
+    </div>
+  </div>
+
+  <div id="bookingsList">
+    <div class="loading">Loading bookings…</div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ===== CONFIG =====
+  const SUPABASE_URL = 'https://epwsxulkylewmaalfxex.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwd3N4dWxreWxld21hYWxmeGV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTE1NTgsImV4cCI6MjA5NDE2NzU1OH0._QaSRjtf1kb3mCL6QA3P9HPkj3AU76XdxPbNRtYc7Ls';
+
+  // CHANGE THIS PASSWORD to something only you know
+  const ADMIN_PASSWORD = 'marketmover2026';
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ===== LOGIN =====
+  function checkPassword() {
+    const entered = document.getElementById('adminPassword').value;
+    if (entered === ADMIN_PASSWORD) {
+      sessionStorage.setItem('mm_admin', 'true');
+      showPanel();
+    } else {
+      document.getElementById('loginError').textContent = 'Wrong password.';
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem('mm_admin');
+    location.reload();
+  }
+
+  function showPanel() {
+    document.getElementById('loginGate').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    loadBookings();
+    loadDispatchStatus();
+  }
+
+  // Auto-login if already authenticated this session
+  if (sessionStorage.getItem('mm_admin') === 'true') {
+    showPanel();
+  }
+
+  // ===== LOAD BOOKINGS =====
+  async function loadBookings() {
+    const list = document.getElementById('bookingsList');
+    list.innerHTML = '<div class="loading">Loading bookings…</div>';
+
+    const { data, error } = await supabaseClient
+      .from('quote_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      list.innerHTML = '<div class="empty-state"><div class="es-icon">⚠️</div>Could not load bookings. ' + error.message + '</div>';
+      return;
+    }
+
+    // Update stats
+    document.getElementById('statPending').textContent = data.filter(b => b.status === 'pending').length;
+    document.getElementById('statQuoted').textContent = data.filter(b => b.status === 'quoted').length;
+    document.getElementById('statAccepted').textContent = data.filter(b => b.status === 'accepted').length;
+    document.getElementById('statPaid').textContent = data.filter(b => b.status === 'paid').length;
+
+    if (data.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="es-icon">📭</div>No bookings yet. They\'ll appear here automatically.</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+
+    // Show pending first (need attention)
+    const pending = data.filter(b => b.status === 'pending');
+    const others = data.filter(b => b.status !== 'pending');
+
+    if (pending.length) {
+      const label = document.createElement('div');
+      label.className = 'section-label';
+      label.textContent = '⏳ Needs a quote';
+      list.appendChild(label);
+      pending.forEach(b => list.appendChild(renderBooking(b)));
+    }
+
+    if (others.length) {
+      const label = document.createElement('div');
+      label.className = 'section-label';
+      label.textContent = 'All other bookings';
+      list.appendChild(label);
+      others.forEach(b => list.appendChild(renderBooking(b)));
+    }
+  }
+
+  function formatAccess(type, stairs) {
+    if (type === 'ground') return 'Ground floor';
+    if (type === 'elevator') return 'Elevator';
+    return `${stairs} flight${stairs > 1 ? 's' : ''} of stairs`;
+  }
+
+  function renderBooking(b) {
+    const card = document.createElement('div');
+    card.className = 'booking-card';
+
+    const statusClass = 'status-' + b.status;
+    const itemDisplay = b.item_link
+      ? `<a href="${b.item_link}" target="_blank">${b.item_link}</a>`
+      : (b.item_photo_url ? `<a href="${b.item_photo_url}" target="_blank">View photo</a>` : 'No item info');
+
+    let actionArea = '';
+    if (b.status === 'pending') {
+      actionArea = `
+        <div class="price-setter">
+          <div class="price-input-wrap">
+            <span>$</span>
+            <input type="number" id="price-${b.id}" placeholder="0" min="0" />
+          </div>
+          <button class="send-quote-btn" onclick="sendQuote('${b.id}')">Send quote →</button>
+          <span class="price-hint">Before HST. Customer pays this + 13%.</span>
+        </div>
+      `;
+    } else if (b.status === 'quoted') {
+      actionArea = `<div class="quote-sent-note">✓ Quote sent: $${b.quoted_price} + HST ($${b.total} total). Waiting for customer to accept.</div>`;
+    } else if (b.status === 'accepted') {
+      actionArea = `<div class="quote-sent-note">✓ Accepted at $${b.total}. Phone: ${b.phone || 'not provided'}</div>`;
+    } else if (b.status === 'paid') {
+      actionArea = `<div class="quote-sent-note">💰 PAID $${b.total}. Phone: ${b.phone || 'n/a'} — time to schedule pickup!</div>`;
+    }
+
+    card.innerHTML = `
+      <div class="booking-top">
+        <div>
+          <div class="booking-name">${b.name}</div>
+          <div class="booking-email"><a href="mailto:${b.email}">${b.email}</a>${b.phone ? ' · ' + b.phone : ''}</div>
+        </div>
+        <span class="status-badge ${statusClass}">${b.status}</span>
+      </div>
+
+      <div class="booking-grid">
+        <div class="booking-field">
+          <div class="fl">📍 Pickup</div>
+          <div class="fv">${b.pickup_address}<br><small>${formatAccess(b.pickup_access, b.pickup_stairs)}</small></div>
+        </div>
+        <div class="booking-field">
+          <div class="fl">📍 Drop-off</div>
+          <div class="fv">${b.dropoff_address}<br><small>${formatAccess(b.dropoff_access, b.dropoff_stairs)}</small></div>
+        </div>
+        <div class="booking-field">
+          <div class="fl">📦 Item</div>
+          <div class="fv">${itemDisplay}</div>
+        </div>
+        <div class="booking-field">
+          <div class="fl">🗓 Requested</div>
+          <div class="fv">${b.requested_date} at ${b.requested_time}</div>
+        </div>
+      </div>
+
+      <div class="booking-meta">
+        <span>Booked: ${new Date(b.created_at).toLocaleString()}</span>
+      </div>
+
+      ${actionArea}
+    `;
+    return card;
+  }
+
+  // ===== SEND QUOTE =====
+  async function sendQuote(bookingId) {
+    const input = document.getElementById('price-' + bookingId);
+    const price = parseFloat(input.value);
+
+    if (!price || price <= 0) {
+      alert('Enter a valid price.');
+      return;
+    }
+
+    const hst = Math.round(price * 0.13 * 100) / 100;
+    const total = Math.round((price + hst) * 100) / 100;
+
+    const btn = input.closest('.price-setter').querySelector('.send-quote-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    const { error } = await supabaseClient
+      .from('quote_requests')
+      .update({
+        quoted_price: price,
+        hst: hst,
+        total: total,
+        status: 'quoted'
+      })
+      .eq('id', bookingId);
+
+    if (error) {
+      alert('Error sending quote: ' + error.message);
+      btn.disabled = false;
+      btn.textContent = 'Send quote →';
+      return;
+    }
+
+    // Reload to show updated state
+    loadBookings();
+  }
+
+  // ===== DISPATCH TOGGLE =====
+  async function loadDispatchStatus() {
+    const { data } = await supabaseClient
+      .from('driver_status')
+      .select('is_dispatched')
+      .eq('id', 1)
+      .single();
+
+    if (data) {
+      document.getElementById('dispatchToggle').classList.toggle('on', data.is_dispatched);
+    }
+  }
+
+  async function toggleDispatch() {
+    const toggle = document.getElementById('dispatchToggle');
+    const newState = !toggle.classList.contains('on');
+    toggle.classList.toggle('on', newState);
+
+    await supabaseClient
+      .from('driver_status')
+      .update({ is_dispatched: newState, updated_at: new Date().toISOString() })
+      .eq('id', 1);
+  }
+
+  // Auto-refresh every 30 seconds
+  setInterval(() => {
+    if (sessionStorage.getItem('mm_admin') === 'true') {
+      loadBookings();
+    }
+  }, 30000);
+</script>
+
+</body>
+</html>

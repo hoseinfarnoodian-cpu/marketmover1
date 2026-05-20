@@ -1646,50 +1646,94 @@
   function animateProgressBar() {
     const bar = document.getElementById('progressBarFill');
     const pct = document.getElementById('progressPercent');
-    const mode = getCurrentMode();
     let progress = 0;
 
-    // During off-hours, the bar should stall at ~75% to show "queued, waiting for driver"
-    const targetProgress = mode === 'active' ? 100 : 75;
-
+    // The bar fills to ~90% then waits for Hossein to actually send the quote.
+    // It never auto-completes — only a real quote from the admin panel finishes it.
     const interval = setInterval(() => {
-      const increment = progress < (targetProgress - 20) ? 4 + Math.random() * 4 : 0.5 + Math.random();
-      progress = Math.min(targetProgress, progress + increment);
+      const increment = progress < 70 ? 3 + Math.random() * 3 : 0.3 + Math.random() * 0.5;
+      progress = Math.min(90, progress + increment);
       bar.style.width = progress + '%';
       pct.textContent = Math.floor(progress);
-      if (progress >= targetProgress) {
+      if (progress >= 90) {
         clearInterval(interval);
-        if (mode === 'active') {
-          // Demo: auto-complete with a placeholder quote
-          setTimeout(showQuote, 600);
-        } else {
-          // Off-hours: show the "queued" state, do not auto-quote
-          showQueued();
-        }
       }
     }, 250);
+
+    // Start listening for Hossein's quote
+    listenForQuote();
   }
 
-  // Off-hours queued state — shown when buyer submits outside business hours
-  function showQueued() {
-    const label = document.querySelector('#modalStep2 .progress-label');
-    if (label) label.textContent = 'Queued — Hossein will respond in the morning';
-    // In production: nothing else needed here — the realtime listener will
-    // flip to step 3 whenever Hossein actually sends back the quote.
+  // ===== REALTIME: wait for Hossein to send the quote =====
+  let quoteChannel = null;
+
+  function listenForQuote() {
+    if (!bookingData.id) {
+      console.error('No booking ID to listen on');
+      return;
+    }
+
+    // Subscribe to updates on this specific booking row
+    quoteChannel = supabaseClient
+      .channel('quote-' + bookingData.id)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'quote_requests',
+        filter: 'id=eq.' + bookingData.id
+      }, (payload) => {
+        const updated = payload.new;
+        if (updated.status === 'quoted' && updated.quoted_price) {
+          showQuote(updated.quoted_price, updated.hst, updated.total);
+        }
+      })
+      .subscribe();
+
+    // Safety net: also poll every 8 seconds in case the realtime event is missed
+    pollForQuote();
   }
 
-  // ===== STEP 2 → STEP 3: Show quote =====
-  // PRODUCTION: Replace this with Supabase realtime subscription on quote_requests row.
-  // When Hossein sets quoted_price in the DB, this function gets the value and runs.
-  function showQuote() {
-    // Demo: generate a "reasonable" quote based on inputs (placeholder logic)
-    // In production, this is whatever Hossein typed in his admin panel
-    const placeholderQuote = 55 + Math.floor(Math.random() * 50);
-    document.getElementById('finalQuotePrice').textContent = placeholderQuote;
-    bookingData.price = placeholderQuote;
+  function pollForQuote() {
+    const poll = setInterval(async () => {
+      if (!bookingData.id) { clearInterval(poll); return; }
+      const { data } = await supabaseClient
+        .from('quote_requests')
+        .select('status, quoted_price, hst, total')
+        .eq('id', bookingData.id)
+        .single();
+      if (data && data.status === 'quoted' && data.quoted_price) {
+        clearInterval(poll);
+        showQuote(data.quoted_price, data.hst, data.total);
+      }
+    }, 8000);
+  }
 
-    document.getElementById('modalStep2').style.display = 'none';
-    document.getElementById('modalStep3').style.display = 'block';
+  // ===== STEP 2 → STEP 3: Show the real quote from Hossein =====
+  function showQuote(price, hst, total) {
+    // Avoid showing twice if both realtime and poll fire
+    if (document.getElementById('modalStep3').style.display === 'block') return;
+
+    // Finish the progress bar
+    const bar = document.getElementById('progressBarFill');
+    const pct = document.getElementById('progressPercent');
+    if (bar) bar.style.width = '100%';
+    if (pct) pct.textContent = '100';
+
+    bookingData.price = price;
+    bookingData.hst = hst;
+    bookingData.total = total;
+    document.getElementById('finalQuotePrice').textContent = price;
+
+    // Clean up the realtime channel
+    if (quoteChannel) {
+      supabaseClient.removeChannel(quoteChannel);
+      quoteChannel = null;
+    }
+
+    setTimeout(() => {
+      document.getElementById('modalStep2').style.display = 'none';
+      document.getElementById('modalStep3').style.display = 'block';
+    }, 600);
   }
 
   function acceptQuote() {
@@ -1698,7 +1742,7 @@
   }
 
   // Step 4 → Step 5: phone collected, go to payment
-  function goToPayment() {
+  async function goToPayment() {
     const phone = document.getElementById('orderPhone').value.trim();
     if (!phone) {
       alert('Please enter your phone number.');
@@ -1706,14 +1750,19 @@
     }
     bookingData.phone = phone;
 
-    // Calculate HST and total
+    // HST and total were already calculated by Hossein when he set the quote
     const subtotal = bookingData.price;
-    const hst = Math.round(subtotal * 0.13 * 100) / 100;  // round to 2 decimals
-    const total = Math.round((subtotal + hst) * 100) / 100;
-
+    const hst = bookingData.hst;
+    const total = bookingData.total;
     bookingData.subtotal = subtotal;
-    bookingData.hst = hst;
-    bookingData.total = total;
+
+    // Save the phone number and mark as accepted in Supabase
+    if (bookingData.id) {
+      await supabaseClient
+        .from('quote_requests')
+        .update({ phone: phone, status: 'accepted' })
+        .eq('id', bookingData.id);
+    }
 
     // Update payment amounts on step 5
     document.getElementById('paymentAmount').textContent = subtotal;
