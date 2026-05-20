@@ -1813,51 +1813,121 @@
   }
 
   // Step 5 → Step 6 → Step 7: process the payment, then confirm
-  function processPayment() {
-    // === PRODUCTION: This is where Stripe Checkout takes over ===
-    //
-    // Option A — Stripe Checkout (easiest, recommended):
-    //   1. Send bookingData to your Supabase Edge Function
-    //   2. Function creates a Stripe Checkout Session and returns the URL
-    //   3. Redirect: window.location.href = checkoutUrl
-    //   4. Stripe handles the entire payment UI on their hosted page
-    //   5. On success, Stripe redirects to /booking-success?session_id=...
-    //   6. That page (or the success_url handler) marks the order as 'paid'
-    //
-    // Option B — Stripe Payment Element (embedded in your site):
-    //   More complex, more design control. Use Option A unless you have a reason not to.
-    //
-    // Example Option A flow:
-    //   const response = await fetch('/api/create-checkout', {
-    //     method: 'POST',
-    //     body: JSON.stringify({
-    //       amount: bookingData.price * 100,  // Stripe uses cents
-    //       email: bookingData.email,
-    //       orderData: bookingData
-    //     })
-    //   });
-    //   const { url } = await response.json();
-    //   window.location.href = url;
-
-    // DEMO: simulate a payment flow
+  async function processPayment() {
+    // Show processing screen
     document.getElementById('modalStep5').style.display = 'none';
     document.getElementById('modalStep6').style.display = 'block';
 
-    // Simulate ~3s payment processing
-    setTimeout(() => {
-      finalizeBooking();
-    }, 2800);
+    try {
+      // Call our Supabase Edge Function to create a Stripe Checkout session
+      const response = await fetch(
+        SUPABASE_URL + '/functions/v1/create-checkout',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({
+            bookingId: bookingData.id,
+            name: bookingData.name,
+            email: bookingData.email,
+            subtotal: bookingData.subtotal,
+            hst: bookingData.hst,
+            total: bookingData.total
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.url) {
+        console.error('Checkout creation failed:', data);
+        alert('Could not start payment. Please try again or text us at (416) 858-8804.');
+        // Go back to payment screen
+        document.getElementById('modalStep6').style.display = 'none';
+        document.getElementById('modalStep5').style.display = 'block';
+        return;
+      }
+
+      // Save the Stripe session ID so we can track it
+      await supabaseClient
+        .from('quote_requests')
+        .update({ stripe_session_id: data.sessionId })
+        .eq('id', bookingData.id);
+
+      // Redirect to Stripe's hosted checkout page
+      window.location.href = data.url;
+    } catch (err) {
+      console.error('Payment error:', err);
+      alert('Could not start payment. Please try again or text us at (416) 858-8804.');
+      document.getElementById('modalStep6').style.display = 'none';
+      document.getElementById('modalStep5').style.display = 'block';
+    }
   }
 
-  function finalizeBooking() {
-    // === PRODUCTION: Update Supabase row with status='paid' and Stripe session ID ===
-    // await supabase.from('quote_requests').update({
-    //   status: 'paid',
-    //   stripe_session_id: sessionId,
-    //   paid_at: new Date()
-    // }).eq('id', bookingData.id);
-    // Twilio Edge Function texts Hossein: "💰 New paid booking from ${name}"
+  // After Stripe redirects back, check the URL for ?payment=success or ?payment=cancelled
+  // and show the right screen.
+  async function checkPaymentReturn() {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    const bookingId = params.get('booking');
+    if (!payment || !bookingId) return;
 
+    if (payment === 'success') {
+      // Fetch the booking from Supabase, mark it paid, show success modal
+      const { data } = await supabaseClient
+        .from('quote_requests')
+        .select('*')
+        .eq('id', bookingId)
+        .single();
+
+      if (data) {
+        bookingData = {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          pickup: data.pickup_address,
+          dropoff: data.dropoff_address,
+          date: data.requested_date,
+          time: data.requested_time,
+          subtotal: data.quoted_price,
+          hst: data.hst,
+          total: data.total,
+          price: data.quoted_price
+        };
+
+        // Mark the booking as paid in the database
+        await supabaseClient
+          .from('quote_requests')
+          .update({ status: 'paid', paid_at: new Date().toISOString() })
+          .eq('id', bookingId);
+
+        // Show the success screen
+        bookingModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        document.getElementById('modalStep1').style.display = 'none';
+        document.getElementById('modalStep2').style.display = 'none';
+        document.getElementById('modalStep3').style.display = 'none';
+        document.getElementById('modalStep4').style.display = 'none';
+        document.getElementById('modalStep5').style.display = 'none';
+        document.getElementById('modalStep6').style.display = 'none';
+
+        finalizeBooking();
+      }
+    } else if (payment === 'cancelled') {
+      alert("Payment was cancelled. Your booking is still saved — try again any time, or text us at (416) 858-8804.");
+    }
+
+    // Clean up the URL so it doesn't trigger again on refresh
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  // Run the check as soon as the page loads
+  checkPaymentReturn();
+
+  function finalizeBooking() {
     // Generate order ID
     const id = 'MM-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     bookingData.orderId = id;
@@ -1865,20 +1935,27 @@
 
     // Render summary
     const formatAccess = (type, stairs) => {
+      if (!type) return '—';
       if (type === 'ground') return 'Ground floor';
       if (type === 'elevator') return 'Elevator';
       return `${stairs} flight${stairs > 1 ? 's' : ''} of stairs`;
     };
     const card = document.getElementById('orderSummaryCard');
+    const pickupAccessRow = bookingData.pickupAccess
+      ? `<div class="summary-row"><span class="label">Pickup access</span><span class="value">${formatAccess(bookingData.pickupAccess, bookingData.pickupStairs)}</span></div>`
+      : '';
+    const dropoffAccessRow = bookingData.dropoffAccess
+      ? `<div class="summary-row"><span class="label">Drop-off access</span><span class="value">${formatAccess(bookingData.dropoffAccess, bookingData.dropoffStairs)}</span></div>`
+      : '';
     card.innerHTML = `
       <div class="summary-row"><span class="label">Pickup</span><span class="value">${bookingData.pickup}</span></div>
-      <div class="summary-row"><span class="label">Pickup access</span><span class="value">${formatAccess(bookingData.pickupAccess, bookingData.pickupStairs)}</span></div>
+      ${pickupAccessRow}
       <div class="summary-row"><span class="label">Drop-off</span><span class="value">${bookingData.dropoff}</span></div>
-      <div class="summary-row"><span class="label">Drop-off access</span><span class="value">${formatAccess(bookingData.dropoffAccess, bookingData.dropoffStairs)}</span></div>
+      ${dropoffAccessRow}
       <div class="summary-row"><span class="label">When</span><span class="value">${bookingData.date} · ${bookingData.time}</span></div>
-      <div class="summary-row"><span class="label">Delivery fee</span><span class="value">$${bookingData.subtotal}.00</span></div>
-      <div class="summary-row"><span class="label">HST (13%)</span><span class="value">$${bookingData.hst.toFixed(2)}</span></div>
-      <div class="summary-row"><span class="label" style="font-weight:600;color:var(--ink);">Total paid</span><span class="value" style="color:var(--moss);font-family:'Fraunces',serif;font-size:18px;">$${bookingData.total.toFixed(2)} ✓</span></div>
+      <div class="summary-row"><span class="label">Delivery fee</span><span class="value">$${Number(bookingData.subtotal).toFixed(2)}</span></div>
+      <div class="summary-row"><span class="label">HST (13%)</span><span class="value">$${Number(bookingData.hst).toFixed(2)}</span></div>
+      <div class="summary-row"><span class="label" style="font-weight:600;color:var(--ink);">Total paid</span><span class="value" style="color:var(--moss);font-family:'Fraunces',serif;font-size:18px;">$${Number(bookingData.total).toFixed(2)} ✓</span></div>
     `;
 
     document.getElementById('modalStep6').style.display = 'none';
