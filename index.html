@@ -151,6 +151,48 @@
     position: relative; color: var(--ink);
   }
   .placeholder-svg { position: absolute; inset: 0; }
+
+  /* Hero slideshow */
+  .hero-slideshow {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  .hero-slideshow .slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+    display: block;
+  }
+  .hero-slideshow .slide.active { opacity: 1; }
+
+  .slideshow-dots {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 3;
+  }
+  .slideshow-dots .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    transition: background 0.3s, transform 0.3s;
+  }
+  .slideshow-dots .dot.active {
+    background: white;
+    transform: scale(1.2);
+  }
   .placeholder-label {
     position: absolute; top: 16px; left: 16px;
     background: rgba(255,255,255,0.9); padding: 6px 12px; border-radius: 6px;
@@ -846,8 +888,8 @@
   <span class="live-dot"></span>
   <span><strong>Hossein is on a delivery right now.</strong></span>
   <div class="quick-actions">
-    <a href="tel:+14165550123" class="qa-btn">📞 Call</a>
-    <a href="sms:+14165550123" class="qa-btn">💬 Text</a>
+    <a href="tel:+14168588804" class="qa-btn">📞 Call</a>
+    <a href="sms:+14168588804" class="qa-btn">💬 Text</a>
     <a href="#" class="qa-btn" onclick="openChat();return false;">Live chat</a>
   </div>
 </div>
@@ -870,7 +912,7 @@
         <div class="hero-tag"><span class="pulse"></span> Picking up across Toronto today</div>
         <h1>Found it on Marketplace. Now <em>I'll grab it</em> for you — inspected, photographed, delivered.</h1>
         <p class="hero-sub">
-          That perfect coffee table in Mississauga? The dresser in Markham? You don't need a truck — just point, and I'll bring it to your door. Anywhere within 30 km of downtown Toronto.
+          That perfect coffee table in Mississauga? The dresser in Markham? You don't need a truck — just point, and I'll bring it to your door, anywhere within 30 km of downtown Toronto. I'm a former UPS delivery driver, so handling fragile items and tight schedules is second nature — your stuff arrives carefully, on time, no drama.
         </p>
         <div class="hero-ctas">
           <button class="btn-primary" onclick="openBookingModal()"><span id="ctaTimeText">Get a quote in 5 minutes</span> <span class="btn-arrow">→</span></button>
@@ -885,19 +927,15 @@
       <div class="hero-photo-wrap">
         <div class="hero-photo">
           <div class="photo-tape"></div>
-          <div class="hero-photo-placeholder">
-            <span class="placeholder-label">Replace with your photo</span>
-            <svg class="placeholder-svg" viewBox="0 0 300 380" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="150" cy="340" rx="140" ry="14" fill="rgba(28,22,18,0.08)"/>
-              <circle cx="150" cy="180" r="50" fill="#3D2B1F"/>
-              <path d="M105 165 Q150 115 195 165 L195 155 Q150 105 105 155 Z" fill="#1C1410"/>
-              <rect x="120" y="220" width="60" height="90" rx="6" fill="#E04A2B"/>
-              <path d="M115 235 L100 290 L115 295 Z" fill="#E04A2B"/>
-              <path d="M185 235 L200 290 L185 295 Z" fill="#E04A2B"/>
-              <path d="M138 195 Q150 205 162 195" stroke="#1C1410" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-              <circle cx="135" cy="178" r="3" fill="#1C1410"/>
-              <circle cx="165" cy="178" r="3" fill="#1C1410"/>
-            </svg>
+          <div class="hero-slideshow">
+            <img class="slide active" src="hossein.jpg" alt="Hossein" />
+            <img class="slide" src="hossein2.jpg" alt="Hossein" />
+            <img class="slide" src="hossein3.jpg" alt="Hossein" />
+          </div>
+          <div class="slideshow-dots">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
           </div>
         </div>
         <div class="floating-card fc-1"><span class="fc-emoji">📸</span> Photo approval before loading</div>
@@ -1039,8 +1077,8 @@
   <footer>
     <div class="logo"><span class="logo-dot"></span> MarketMover</div>
     <p>Toronto's friendliest Marketplace pickup service.</p>
-    <p>Text or call: <strong>(416) 555-0123</strong></p>
-    <p style="margin-top: 8px; font-size: 13px;">Service area: 30 km radius of downtown Toronto · Card or Apple Pay for delivery · E-transfer for seller · Prices before HST (HST# 123456789RT0001)</p>
+    <p>Text or call: <strong>(416) 858-8804</strong></p>
+    <p style="margin-top: 8px; font-size: 13px;">Service area: 30 km radius of downtown Toronto · Card or Apple Pay for delivery · E-transfer for seller · Prices before HST (HST# 716243639RT0001)</p>
     <p style="margin-top: 16px; opacity: 0.6;">© 2026 MarketMover · Operated in Toronto, ON</p>
   </footer>
 
@@ -1325,8 +1363,8 @@
   <div class="dispatch-actions" id="dispatchActions">
     <div class="da-label">Hossein is on a delivery — reach him directly</div>
     <div class="da-row">
-      <a href="tel:+14165550123" class="da-btn">📞 Call now</a>
-      <a href="sms:+14165550123" class="da-btn">💬 Text</a>
+      <a href="tel:+14168588804" class="da-btn">📞 Call now</a>
+      <a href="sms:+14168588804" class="da-btn">💬 Text</a>
     </div>
   </div>
 
@@ -1922,7 +1960,7 @@
     } else if (q.includes('hi') || q.includes('hello') || q.includes('hey')) {
       reply = "Hey there! 👋 What can I help you with — a quote, a booking, or just a question?";
     } else {
-      reply = "Good question — let me get back to you on that one. You can also text me at (416) 555-0123 for a faster reply.";
+      reply = "Good question — let me get back to you on that one. You can also text me at (416) 858-8804 for a faster reply.";
     }
     addMessage(reply, 'bot');
   }
@@ -1968,6 +2006,22 @@
      Use Supabase Storage to upload the file from #orderPhoto input
      Get the public URL, save it on the quote_request row
   */
+
+  // ===== HERO SLIDESHOW =====
+  (function() {
+    const slides = document.querySelectorAll('.hero-slideshow .slide');
+    const dots = document.querySelectorAll('.slideshow-dots .dot');
+    if (slides.length < 2) return;
+
+    let current = 0;
+    setInterval(() => {
+      slides[current].classList.remove('active');
+      dots[current].classList.remove('active');
+      current = (current + 1) % slides.length;
+      slides[current].classList.add('active');
+      dots[current].classList.add('active');
+    }, 4000);
+  })();
 </script>
 
 </body>
